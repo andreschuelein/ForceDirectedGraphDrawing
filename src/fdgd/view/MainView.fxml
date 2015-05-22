@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fdgd.controller.Controller">
+   <children>
+      <SplitPane fx:id="splitPane" dividerPositions="0.637123745819398" layoutX="118.0" layoutY="7.0" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <items>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <Canvas fx:id="drawArea" height="400.0" width="400.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
+               </children>
+            </AnchorPane>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <Pane prefHeight="398.0" prefWidth="214.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <TextField fx:id="textField" layoutX="4.0" layoutY="17.0" prefHeight="25.0" prefWidth="186.0" />
+                        <Button layoutX="4.0" layoutY="48.0" mnemonicParsing="false" onAction="#fullyConnectedPressed" text="fully connected" />
+                        <Button layoutX="105.0" layoutY="154.0" mnemonicParsing="false" onAction="#singleStepPressed" text="Single Step" />
+                        <Button layoutX="105.0" layoutY="187.0" mnemonicParsing="false" onAction="#tenStepsPressed" text="10 Steps" />
+                        <Button layoutX="4.0" layoutY="154.0" mnemonicParsing="false" onAction="#startAnimationPressed" text="Start Animation" />
+                        <Button layoutX="4.0" layoutY="187.0" mnemonicParsing="false" onAction="#stopAnimationPressed" text="Stop Animation" />
+                        <Button layoutX="135.0" layoutY="352.0" mnemonicParsing="false" onAction="#exitButtonPressed" text="EXIT" />
+                        <Button layoutX="4.0" layoutY="82.0" mnemonicParsing="false" onAction="#randomGraphPressed" text="random graph" />
+                        <Button layoutX="4.0" layoutY="116.0" mnemonicParsing="false" onAction="#scaleFreeGraphPressed" text="scale-free graph" />
+                        <ChoiceBox fx:id="cbox" layoutX="4.0" layoutY="219.0" prefWidth="150.0" 
+                        	
+                        />
+                        <Label fx:id="lbl1" layoutX="-17.0" layoutY="-20.0" prefHeight="8.0" prefWidth="138.0" text="set number of nodes:">
+                           <padding>
+                              <Insets left="20.0" top="20.0" />
+                           </padding>
+                        </Label>
+                     </children>
+                  </Pane>
+               </children>
+            </AnchorPane>
+        </items>
+      </SplitPane>
+   </children>
+</AnchorPane>
