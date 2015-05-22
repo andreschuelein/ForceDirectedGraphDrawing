@@ -32,7 +32,7 @@ public class Controller {
 	private Color canvasColor=Color.GRAY; //canvas background color
 	private Color nodeColor=Color.DARKSLATEGRAY; //node color
 	private Color edgeColor=Color.WHITE; // edge color
-	private double defaultNodeSize=20;//canW/100;
+	private double defaultNodeSize=10;//canW/100;
 	private double nodeSize=defaultNodeSize;	// draw diameter of a node
 	private double nodeZoomScale=.1;
 	private ForceDirectedDrawing fdd;
