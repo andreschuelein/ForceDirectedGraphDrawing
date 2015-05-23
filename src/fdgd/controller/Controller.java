@@ -19,8 +19,12 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.SwipeEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 
 
 public class Controller {
@@ -29,12 +33,16 @@ public class Controller {
 	private final double canW=1000; //canvas width
 	private final double canH=1000; //canvas height
 	private final double contW=200;	//control area width
-	private Color canvasColor=Color.GRAY; //canvas background color
+	private Color canvasColor=Color.rgb(92,93,112); //canvas background color
 	private Color nodeColor=Color.DARKSLATEGRAY; //node color
-	private Color edgeColor=Color.WHITE; // edge color
+	private Color nodeTargetColor=Color.rgb(237,74,74);
+	private Color edgeColor=Color.rgb(211,217,206); // edge color
 	private double defaultNodeSize=10;//canW/100;
 	private double nodeSize=defaultNodeSize;	// draw diameter of a node
 	private double nodeZoomScale=.1;
+	private boolean nodeBorder=true;
+	private double nodeBorderSize=2;
+	private Color nodeBorderColor=Color.BLACK;
 	private ForceDirectedDrawing fdd;
 	private double paddingFactor=0.2;
 	private final int defaultNumOfNodes=25;
@@ -47,7 +55,9 @@ public class Controller {
 	private double zoom=1;
 	private double stepsPerFrame=20;
 	private boolean autoZoom=true;
-	
+	private double dragOriginX;
+	private double dragOriginY;
+	private double zoomFactor=.2;
 	
 	
 	@FXML private SplitPane splitPane;
@@ -62,22 +72,41 @@ public class Controller {
 		splitPane.setDividerPositions(canW/(canW+contW),contW/(canW+contW));
 		drawArea.setHeight(canH);
 		drawArea.setWidth(canW);
-		
 		drawArea.setOnDragDetected(new EventHandler<MouseEvent>(){
-
 			@Override
 			public void handle(MouseEvent event) {
-				System.out.println("drag detected!");
+				dragOriginX=event.getX();
+				dragOriginY=event.getY();
+				System.out.println("drag detected - X: "+event.getX()+" Y:"+event.getY());
+			}
+		});
+		
+		drawArea.setOnMousePressed(new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(MouseEvent event) {
+				System.out.println("mouse press detected - X: "+event.getX()+" Y:"+event.getY());
 				
 			}
-			
+		});
+		
+		drawArea.setOnScroll(new EventHandler<ScrollEvent>() {
+			@Override
+			public void handle(ScrollEvent event) {
+				if (!autoZoom) {
+					if (event.getDeltaY()>0) { // scroll up - zoom in
+						zoom+=zoomFactor;
+					}else
+						if (zoom-zoomFactor>0) {
+							zoom-=zoomFactor; //scroll down - zoom out
+						}
+				}
+			}
 		});
 		
 		fdd = new ForceDirectedDrawing(defaultNumOfNodes);
 		textField.setPromptText("please input the number of nodes");
 		cbox.getItems().addAll("auto zoom/pane","free zoom/pane");
 		cbox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-
 			@Override
 			public void changed(ObservableValue<? extends Number> observable,
 					Number oldValue, Number newValue) {	
@@ -92,11 +121,8 @@ public class Controller {
 				default:
 					break;
 				}
-				
 			}
 		});
-		
-
 	}
 	
 	@FXML
@@ -123,6 +149,14 @@ public class Controller {
 		readTextField();
 		fdd.buildScaleFreeGraph();
 		startRenderingAndAnimation();
+	}
+	
+	@FXML
+	protected void treeGraphPressed(ActionEvent event){
+		readTextField();
+		fdd.buildTreeGraph();
+		startRenderingAndAnimation();
+		
 	}
 	
 	
@@ -188,10 +222,13 @@ public class Controller {
 		//draw background
 		gc.setFill(canvasColor);
 		gc.fillRect(0, 0, canW, canH);
+		if (autoZoom) {
+			iniCenterAndZoom();
+		}
 		
-		iniCenterAndZoom();
 		
 		//generate complete graph
+		//System.out.println("Zoom: "+zoom+"x");
 		drawEdges();
 		drawNodes();
 	}
@@ -199,10 +236,13 @@ public class Controller {
 	private void drawNodes(){
 		gc.setFill(nodeColor);
 		for (int i = 0; i < fdd.getNumON(); i++) {
-			gc.fillOval(shifterX(zoomer(fdd.getNodeX(i))),
-					shifterY(zoomer(fdd.getNodeY(i))), 
-						zoomer(nodeSize), 
-						zoomer(nodeSize));
+			if(fdd.getMaxDegree()!=fdd.getMinDegree()){
+				double colorFactor=(double)(fdd.getDegreeDistribution(i)-fdd.getMinDegree())/(fdd.getMaxDegree()-fdd.getMinDegree());
+				//System.out.println("CF:"+colorFactor+" D(i)"+fdd.getDegreeDistribution(i)+" min:"+fdd.getMinDegree()+" max:"+fdd.getMaxDegree());
+				gc.setFill(nodeColor.interpolate(nodeTargetColor, colorFactor));
+			}
+			drawSingleNode(fdd.getNodeX(i), fdd.getNodeY(i), nodeSize+fdd.getDegreeDistribution(i));
+			
 		}
 	}
 	
@@ -212,10 +252,10 @@ public class Controller {
 			for (int j = 0; j < fdd.getNumON(); j++) {		
 		if (i!=j&&i<j) {				
 					if (fdd.getEdge(i, j)) {					
-					gc.strokeLine(shifterX(zoomer(fdd.getNodeX(i)+nodeSize/2)),
-							shifterY(zoomer(fdd.getNodeY(i)+nodeSize/2)),
-									shifterX(zoomer(fdd.getNodeX(j)+nodeSize/2)),
-											shifterY(zoomer(fdd.getNodeY(j)+nodeSize/2)));
+					gc.strokeLine(shifterX(zoomer(fdd.getNodeX(i))),//+nodeSize/2)),
+							shifterY(zoomer(fdd.getNodeY(i))),//+nodeSize/2)),
+									shifterX(zoomer(fdd.getNodeX(j))),//+nodeSize/2)),
+											shifterY(zoomer(fdd.getNodeY(j))));//+nodeSize/2)));
 					}
 				}
 			}
@@ -256,17 +296,32 @@ public class Controller {
 			zoom=Math.min((1-paddingFactor)*canW/(vec[1]-vec[0]), (1-paddingFactor)*canH/(vec[3]-vec[2]));
 			shiftX=canW/2-zoomer(vec[0]+vec[1])/2;
 			shiftY=canH/2-zoomer(vec[2]+vec[3])/2;
-			//nodeSize=nodeSize*zoom;
+		
 		}
 		
-		//if ((vec[1]-vec[0]>canW)||(vec[3]-vec[2]>canH)) {
-			
-		//}else{
-		//	zoom=Math.max((vec[1]-vec[0])/canW, (vec[3]-vec[2])/canH);
-		//}
-		//DecimalFormat nf = new DecimalFormat("#.0");
-		//System.out.println("xMin:"+nf.format(vec[0])+" xMax:"+nf.format(vec[1])+" xDiff:"+nf.format(vec[1]-vec[0])+" yMin:"+nf.format(vec[2])+" yMax:"+nf.format(vec[3])+
-		//		" Xshift:"+nf.format(shiftX)+" Yshift:"+nf.format(shiftY)+" yDiff:"+nf.format(vec[3]-vec[2])+" zoom:"+nf.format(zoom));
+		
+	}
+	
+	private double[] coordinateSpaceToDrawSpace(double x,double y){
+		double [] vec = null;
+		return vec;
+	}
+	
+	private void drawSingleNode(double x, double y, double size){
+		if (nodeBorder) {
+			Color colorbuffer=(Color) gc.getFill();
+			gc.setFill(nodeBorderColor);
+			gc.fillOval(shifterX(zoomer(x))-(size+nodeBorderSize)/2,
+					shifterY(zoomer(y))-(size+nodeBorderSize)/2, 
+						size+nodeBorderSize, 
+						size+nodeBorderSize);
+			gc.setFill(colorbuffer);
+		}
+		
+		gc.fillOval(shifterX(zoomer(x))-size/2,
+				shifterY(zoomer(y))-size/2, 
+					size, 
+					size);
 	}
 	
 }

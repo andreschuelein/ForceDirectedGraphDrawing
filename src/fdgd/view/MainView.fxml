@@ -29,14 +29,13 @@
                         <Button layoutX="135.0" layoutY="352.0" mnemonicParsing="false" onAction="#exitButtonPressed" text="EXIT" />
                         <Button layoutX="4.0" layoutY="82.0" mnemonicParsing="false" onAction="#randomGraphPressed" text="random graph" />
                         <Button layoutX="4.0" layoutY="116.0" mnemonicParsing="false" onAction="#scaleFreeGraphPressed" text="scale-free graph" />
-                        <ChoiceBox fx:id="cbox" layoutX="4.0" layoutY="219.0" prefWidth="150.0" 
-                        	
-                        />
+                        <ChoiceBox fx:id="cbox" layoutX="4.0" layoutY="219.0" prefWidth="150.0" />
                         <Label fx:id="lbl1" layoutX="-17.0" layoutY="-20.0" prefHeight="8.0" prefWidth="138.0" text="set number of nodes:">
                            <padding>
                               <Insets left="20.0" top="20.0" />
                            </padding>
                         </Label>
+                        <Button layoutX="118.0" layoutY="48.0" mnemonicParsing="false" onAction="#treeGraphPressed" text="tree graph" />
                      </children>
                   </Pane>
                </children>
