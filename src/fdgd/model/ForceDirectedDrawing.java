@@ -87,11 +87,12 @@ public class ForceDirectedDrawing extends NetworkBuilder {
 		
 	}
 	
-	public void applyForce(){
+	public void applyForce(int ignoreNode){
 		for (int i = 0; i < numON; i++) {
-			nodeLocations[i][0]=nodeLocations[i][0]+c4*totalForce[i][0];
-			nodeLocations[i][1]=nodeLocations[i][1]+c4*totalForce[i][1];
-
+			if(i!=ignoreNode){
+				nodeLocations[i][0]=nodeLocations[i][0]+c4*totalForce[i][0];
+				nodeLocations[i][1]=nodeLocations[i][1]+c4*totalForce[i][1];
+			}
 		}
 	}
 	
@@ -155,10 +156,10 @@ public class ForceDirectedDrawing extends NetworkBuilder {
 			
 	}
 	
-	public void simulateSingleStep(){
+	public void simulateSingleStep(int ignoreNode){
 		initForces();
 		updateForce();
-		applyForce();
+		applyForce(ignoreNode);
 	}
 	
 

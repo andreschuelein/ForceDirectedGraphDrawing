@@ -1,15 +1,10 @@
 package fdgd.controller;
 
 
-import java.text.DecimalFormat;
-
 import fdgd.model.ForceDirectedDrawing;
-import fdgd.model.NetworkBuilder;
 import javafx.animation.AnimationTimer;
-import javafx.beans.binding.DoubleBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -19,16 +14,12 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.input.SwipeEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 
 
 public class Controller {
-	//private NetworkBuilder graph;
 	private GraphicsContext gc;
 	private final double canW=1000; //canvas width
 	private final double canH=1000; //canvas height
@@ -60,6 +51,10 @@ public class Controller {
 	private double zoomFactor=.2;
 	private boolean tooltip=true; //tooltip toggle
 	private boolean graphDrawn=false;
+	private boolean simulationActive=false;
+	private boolean started=false;
+	private boolean mousePressed=false;
+	private int draggedNode=-1;
 	
 	
 	@FXML private SplitPane splitPane;
@@ -70,35 +65,43 @@ public class Controller {
 	
 	@FXML 
 	public void initialize(){
+		fdd = new ForceDirectedDrawing(defaultNumOfNodes);
+		gc = drawArea.getGraphicsContext2D();
 		nodeLabel.setVisible(false);
 		nodeLabel.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-font-size: 20px;");
-		gc = drawArea.getGraphicsContext2D();
 		splitPane.setDividerPositions(canW/(canW+contW),contW/(canW+contW));
+		textField.setPromptText("please input the number of nodes");
 		drawArea.setHeight(canH);
 		drawArea.setWidth(canW);
-		drawArea.setOnDragDetected(new EventHandler<MouseEvent>(){
+		
+		drawArea.setOnMouseDragged(new EventHandler<MouseEvent>(){
 			@Override
 			public void handle(MouseEvent event) {
-				dragOriginX=event.getX();
-				dragOriginY=event.getY();
-				System.out.println("drag detected - X: "+event.getX()+" Y:"+event.getY());
+				if (draggedNode!=-1) {
+					fdd.setNodeLocation(drawSpaceToCoordinateSpace(event.getX(), event.getY())[0],
+							drawSpaceToCoordinateSpace(event.getX(), event.getY())[1], draggedNode);
+				}
+				
 			}
 		});
 		
 		drawArea.setOnMousePressed(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) {
-				System.out.println("mouse press detected - X: "+event.getX()+" Y:"+event.getY());
-				
+				draggedNode=checkForMouseNodeCollision(event.getX(), event.getY());
+				}
+		});
+		
+		drawArea.setOnMouseReleased(new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(MouseEvent event) {
+				draggedNode=-1;
 			}
 		});
 		
 		drawArea.setOnMouseMoved(new EventHandler<MouseEvent>() {
 			@Override public void handle(MouseEvent event){
-				//double mouseX=event.getX();
-				//double mouseY=event.getY();
 				int node=checkForMouseNodeCollision(event.getX(),event.getY());
-				
 				if (node!=-1) {
 					nodeLabel.setText("node: "+Integer.toString(node)+"\n degree: "+fdd.getDegreeDistribution(node));
 					nodeLabel.setVisible(true);
@@ -107,7 +110,6 @@ public class Controller {
 				} else {
 					nodeLabel.setVisible(false);
 				}
-				
 			}
 		});
 		
@@ -125,8 +127,6 @@ public class Controller {
 			}
 		});
 		
-		fdd = new ForceDirectedDrawing(defaultNumOfNodes);
-		textField.setPromptText("please input the number of nodes");
 		cbox.getItems().addAll("auto zoom/pane","free zoom/pane");
 		cbox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
 			@Override
@@ -145,6 +145,9 @@ public class Controller {
 				}
 			}
 		});
+		//START ANIMATION
+		animationIni();
+		startRenderingAndAnimation();
 	}
 	
 	@FXML
@@ -155,6 +158,7 @@ public class Controller {
 	@FXML 
 	protected void fullyConnectedPressed(ActionEvent event){
 		readTextField();
+		startDrawing();
 		fdd.buildCompleteGraph();
 		startRenderingAndAnimation(); 
 	}
@@ -162,6 +166,7 @@ public class Controller {
 	@FXML 
 	protected void randomGraphPressed(ActionEvent event){
 		readTextField();
+		startDrawing();
 		fdd.buildRandomGraph(defaultProbability);
 		startRenderingAndAnimation();
 	}
@@ -169,6 +174,7 @@ public class Controller {
 	@FXML 
 	protected void scaleFreeGraphPressed(ActionEvent event){
 		readTextField();
+		startDrawing();
 		fdd.buildScaleFreeGraph();
 		startRenderingAndAnimation();
 	}
@@ -176,40 +182,40 @@ public class Controller {
 	@FXML
 	protected void treeGraphPressed(ActionEvent event){
 		readTextField();
+		startDrawing();
 		fdd.buildTreeGraph();
 		startRenderingAndAnimation();
 		
 	}
 	
-	
 	@FXML
 	protected void singleStepPressed(ActionEvent event){
-		fdd.simulateSingleStep();
-		renderGraph();
+		fdd.simulateSingleStep(draggedNode);
+		//renderGraph();
 	}
 	
 	@FXML
 	protected void tenStepsPressed(ActionEvent event){
 		for (int i = 0; i < 10; i++) {
-			fdd.simulateSingleStep();
+			fdd.simulateSingleStep(draggedNode);
 		}		
-		renderGraph();
+		//renderGraph();
 	}
 	
 	@FXML
 	protected void startAnimationPressed(ActionEvent event){
-		timer.start();
-		continueAnimation=true;
+		simulationActive=true;
+		//timer.start();
+		//continueAnimation=true;
 		
 	}
 	
 	@FXML
 	protected void stopAnimationPressed(ActionEvent event){
-		timer.stop();
-		continueAnimation=false;
+		simulationActive=false;
+		//timer.stop();
+		//continueAnimation=false;
 	}
-	
-	
 	
 	private void readTextField(){
 		 if ((textField.getText() != null && !textField.getText().isEmpty())) {
@@ -229,15 +235,15 @@ public class Controller {
 	
 	private void startRenderingAndAnimation(){
 		 fdd.generateInitialSpawns(canW, canH, paddingFactor*canW, paddingFactor*canH);
-		 if (continueAnimation) {
-				timer.stop();
-			}
+		 //if (continueAnimation) {
+				//timer.stop();
+		//	}
 		 //nodeSize=defaultNodeSize;
-		 renderGraph();
-		 animationIni();
-		 if (continueAnimation) {
+		 //renderGraph();
+		// animationIni();
+		// if (continueAnimation) {
 			timer.start();
-		}
+		//}
 	}
 	
 	private void renderGraph(){
@@ -247,12 +253,11 @@ public class Controller {
 		if (autoZoom) {
 			iniCenterAndZoom();
 		}
-		
-		//generate complete graph
-		//System.out.println("Zoom: "+zoom+"x");
-		drawEdges();
-		drawNodes();
-		graphDrawn=true;
+		if (started) {
+			drawEdges();
+			drawNodes();
+			graphDrawn=true;
+		}
 	}
 	
 	private void drawNodes(){
@@ -303,10 +308,10 @@ public class Controller {
 			for (int j = 0; j < fdd.getNumON(); j++) {		
 		if (i!=j&&i<j) {				
 					if (fdd.getEdge(i, j)) {					
-					gc.strokeLine(shifterX(zoomer(fdd.getNodeX(i))),//+nodeSize/2)),
-							shifterY(zoomer(fdd.getNodeY(i))),//+nodeSize/2)),
-									shifterX(zoomer(fdd.getNodeX(j))),//+nodeSize/2)),
-											shifterY(zoomer(fdd.getNodeY(j))));//+nodeSize/2)));
+					gc.strokeLine(shifterX(zoomer(fdd.getNodeX(i))),
+							shifterY(zoomer(fdd.getNodeY(i))),
+									shifterX(zoomer(fdd.getNodeX(j))),
+											shifterY(zoomer(fdd.getNodeY(j))));
 					}
 				}
 			}
@@ -319,8 +324,11 @@ public class Controller {
 			@Override
 			public void handle(long now) {
 				// TODO Auto-generated method stub
-				for (int i = 0; i < stepsPerFrame; i++) {
-					fdd.simulateSingleStep();
+				if (simulationActive) {
+					for (int i = 0; i < stepsPerFrame; i++) {
+						fdd.simulateSingleStep(draggedNode);
+					}
+					
 				}
 				renderGraph();
 			}
@@ -349,7 +357,7 @@ public class Controller {
 	
 	private double inverseZoomer(double coordinate){
 		if (zoom!=0) {
-			return coordinate*zoom;
+			return coordinate/zoom;
 		}else{
 			return coordinate;
 		}
@@ -403,7 +411,7 @@ public class Controller {
 				node=nodeHitbox(i);
 				if (node[0]<x&&node[1]<y&&node[2]>x&&node[3]>y) {
 					found=i;
-					System.out.println(i);
+					//System.out.println(i);
 				}
 			}
 		}
@@ -412,9 +420,13 @@ public class Controller {
 	
 	private double[] drawSpaceToCoordinateSpace(double x,double y){
 		double[] vec=new double[2];
-		vec[0]=inverseShifterX(inverseZoomer(x));
-		vec[1]=inverseShifterY(inverseZoomer(y));
+		vec[0]=inverseZoomer(inverseShifterX(x));
+		vec[1]=inverseZoomer(inverseShifterY(y));
 		return vec;
+	}
+	
+	private void startDrawing(){
+		started=true;
 	}
 }
 
