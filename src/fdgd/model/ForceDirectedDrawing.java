@@ -61,6 +61,11 @@ public class ForceDirectedDrawing extends NetworkBuilder {
 		return nodeLocations[node][1];
 	}
 	
+	public void setNodeLocation(double x, double y, int node){
+		nodeLocations[node][0]=x;
+		nodeLocations[node][1]=y;
+	}
+	
 	public void updateForce(){
 		for (int i = 0; i < numON; i++) {
 			// loop over all node pairs

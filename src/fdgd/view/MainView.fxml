@@ -42,5 +42,6 @@
             </AnchorPane>
         </items>
       </SplitPane>
+      <Label fx:id="nodeLabel" contentDisplay="CENTER" text="Label" />
    </children>
 </AnchorPane>

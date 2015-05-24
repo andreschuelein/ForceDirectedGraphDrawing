@@ -58,16 +58,20 @@ public class Controller {
 	private double dragOriginX;
 	private double dragOriginY;
 	private double zoomFactor=.2;
+	private boolean tooltip=true; //tooltip toggle
+	private boolean graphDrawn=false;
 	
 	
 	@FXML private SplitPane splitPane;
-	@FXML private Label lbl1;
+	@FXML private Label nodeLabel;
 	@FXML private Canvas drawArea;
 	@FXML private TextField textField;	
 	@FXML private ChoiceBox<String> cbox;
 	
 	@FXML 
 	public void initialize(){
+		nodeLabel.setVisible(false);
+		nodeLabel.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-font-size: 20px;");
 		gc = drawArea.getGraphicsContext2D();
 		splitPane.setDividerPositions(canW/(canW+contW),contW/(canW+contW));
 		drawArea.setHeight(canH);
@@ -85,6 +89,24 @@ public class Controller {
 			@Override
 			public void handle(MouseEvent event) {
 				System.out.println("mouse press detected - X: "+event.getX()+" Y:"+event.getY());
+				
+			}
+		});
+		
+		drawArea.setOnMouseMoved(new EventHandler<MouseEvent>() {
+			@Override public void handle(MouseEvent event){
+				//double mouseX=event.getX();
+				//double mouseY=event.getY();
+				int node=checkForMouseNodeCollision(event.getX(),event.getY());
+				
+				if (node!=-1) {
+					nodeLabel.setText("node: "+Integer.toString(node)+"\n degree: "+fdd.getDegreeDistribution(node));
+					nodeLabel.setVisible(true);
+					nodeLabel.setLayoutX(event.getX()+10);
+					nodeLabel.setLayoutY(event.getY()-10);
+				} else {
+					nodeLabel.setVisible(false);
+				}
 				
 			}
 		});
@@ -226,11 +248,11 @@ public class Controller {
 			iniCenterAndZoom();
 		}
 		
-		
 		//generate complete graph
 		//System.out.println("Zoom: "+zoom+"x");
 		drawEdges();
 		drawNodes();
+		graphDrawn=true;
 	}
 	
 	private void drawNodes(){
@@ -242,8 +264,37 @@ public class Controller {
 				gc.setFill(nodeColor.interpolate(nodeTargetColor, colorFactor));
 			}
 			drawSingleNode(fdd.getNodeX(i), fdd.getNodeY(i), nodeSize+fdd.getDegreeDistribution(i));
-			
 		}
+	}
+	
+	/**
+	 * Computed the hitbox of a rendered node. The the size of the reticle hitbox depends both on the screen position of the node and the size of the node.
+	 * @param node 	index of the node of which the hitbox has to be computed
+	 * @return double[4]: 
+	 * 				[0] - x component of top-left corner
+	 * 				[1] - y component of top-left corner
+	 *  			[2] - x component of bottom-right corner
+	 * 				[3] - y component of bottom-right corner
+	 */
+	private double[] nodeHitbox(int node){
+		double[] hitbox = new double[4];
+		double size=  nodeSize+fdd.getDegreeDistribution(node);
+		double x = fdd.getNodeX(node);
+		double y = fdd.getNodeY(node);
+		if (nodeBorder) {
+			hitbox[0]=shifterX(zoomer(x))-(size+nodeBorderSize)/2;
+			hitbox[1]=shifterY(zoomer(y))-(size+nodeBorderSize)/2;
+			hitbox[2]=shifterX(zoomer(x))+(size+nodeBorderSize)/2;
+			hitbox[3]=shifterY(zoomer(y))+(size+nodeBorderSize)/2;
+		}else{
+			hitbox[0]=shifterX(zoomer(x))-size/2;
+			hitbox[1]=shifterY(zoomer(y))-size/2;
+			hitbox[2]=shifterX(zoomer(x))+size/2;
+			hitbox[3]=shifterY(zoomer(y))+size/2;
+		}
+		
+		
+		return hitbox;
 	}
 	
 	private void drawEdges(){
@@ -280,14 +331,30 @@ public class Controller {
 		return x+shiftX;
 	}
 	
+	private double inverseShifterX(double x){
+		return x-shiftX;
+	}
+	
 	private double shifterY(double y){
 		return y+shiftY;
+	}
+	
+	private double inverseShifterY(double y){
+		return y-shiftY;
 	}
 	
 	private double zoomer(double coordinate){
 		return coordinate*zoom;
 	}
 	
+	private double inverseZoomer(double coordinate){
+		if (zoom!=0) {
+			return coordinate*zoom;
+		}else{
+			return coordinate;
+		}
+		
+	}
 	
 	private void iniCenterAndZoom(){
 		double[] vec;
@@ -296,10 +363,7 @@ public class Controller {
 			zoom=Math.min((1-paddingFactor)*canW/(vec[1]-vec[0]), (1-paddingFactor)*canH/(vec[3]-vec[2]));
 			shiftX=canW/2-zoomer(vec[0]+vec[1])/2;
 			shiftY=canH/2-zoomer(vec[2]+vec[3])/2;
-		
 		}
-		
-		
 	}
 	
 	private double[] coordinateSpaceToDrawSpace(double x,double y){
@@ -324,6 +388,34 @@ public class Controller {
 					size);
 	}
 	
+	/**
+	 * Tests whether the mouse pointer collided with any drawn node on the canvas and returns the index of the node in case of a collision.
+	 * @param x (double) - x coordinate of the mouse relative to the canvas
+	 * @param y (double) - y coordinate of the mouse relative to the canvas
+	 * @return int:
+	 * 		-1 in case of no collision or the index of the node that the mouse collided with otherwise
+	 */
+	private int checkForMouseNodeCollision(double x, double y){
+		double[] node;
+		int found=-1;
+		if (graphDrawn) {
+			for (int i = 0; i < fdd.getNumON(); i++) {
+				node=nodeHitbox(i);
+				if (node[0]<x&&node[1]<y&&node[2]>x&&node[3]>y) {
+					found=i;
+					System.out.println(i);
+				}
+			}
+		}
+		return found;
+	}
+	
+	private double[] drawSpaceToCoordinateSpace(double x,double y){
+		double[] vec=new double[2];
+		vec[0]=inverseShifterX(inverseZoomer(x));
+		vec[1]=inverseShifterY(inverseZoomer(y));
+		return vec;
+	}
 }
 
 	
