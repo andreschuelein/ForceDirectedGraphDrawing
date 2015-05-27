@@ -15,11 +15,20 @@ public class ForceDirectedDrawing extends NetworkBuilder {
 	double[][] totalForce;
 	
 	// constants for Eades:
-	double c1=4;	// spring force 		c1*Math.log(distance/c2);
+	//* large tree graphs
+	double c1=1;	// spring force 		c1*Math.log(distance/c2);
 	double c2=1;	// spring scale
 	double c3=5000;	// repulsion scale 	c3/Math.pow(distance, 2);
 	double c4=1; 	// animation speed
-	// 1 10 10000 1 works but slow
+	
+	// constants for Eades:
+	
+	//good for complete graphs:
+	/*double c1=4;	// spring force 		c1*Math.log(distance/c2);
+	double c2=1;	// spring scale
+	double c3=5000;	// repulsion scale 	c3/Math.pow(distance, 2);
+	double c4=1; 	// animation speed
+*/	// 1 10 10000 1 works but slow
 	// 5 1 10000 1 works well, nodes a bit too spread
 	
 	double stabilizer1=1;

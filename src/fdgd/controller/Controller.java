@@ -36,7 +36,7 @@ public class Controller {
 	private Color nodeBorderColor=Color.BLACK;
 	private ForceDirectedDrawing fdd;
 	private double paddingFactor=0.2;
-	private final int defaultNumOfNodes=25;
+	private final int defaultNumOfNodes=40;
 	private AnimationTimer timer;
 	private final double defaultProbability=0.1;
 	private final int defaultNumberOfStubs=2;
@@ -55,6 +55,7 @@ public class Controller {
 	private boolean started=false;
 	private boolean mousePressed=false;
 	private int draggedNode=-1;
+	private int tooltipNode=-1;
 	
 	
 	@FXML private SplitPane splitPane;
@@ -81,6 +82,14 @@ public class Controller {
 					fdd.setNodeLocation(drawSpaceToCoordinateSpace(event.getX(), event.getY())[0],
 							drawSpaceToCoordinateSpace(event.getX(), event.getY())[1], draggedNode);
 				}
+				if (tooltipNode!=-1) {
+					nodeLabel.setText("node: "+Integer.toString(tooltipNode)+"\ndegree: "+fdd.getDegreeDistribution(tooltipNode));
+					nodeLabel.setVisible(true);
+					nodeLabel.setLayoutX(event.getX()+25);
+					nodeLabel.setLayoutY(event.getY()-25);
+				} else {
+					nodeLabel.setVisible(false);
+				}
 				
 			}
 		});
@@ -101,12 +110,12 @@ public class Controller {
 		
 		drawArea.setOnMouseMoved(new EventHandler<MouseEvent>() {
 			@Override public void handle(MouseEvent event){
-				int node=checkForMouseNodeCollision(event.getX(),event.getY());
-				if (node!=-1) {
-					nodeLabel.setText("node: "+Integer.toString(node)+"\n degree: "+fdd.getDegreeDistribution(node));
+				tooltipNode=checkForMouseNodeCollision(event.getX(),event.getY());
+				if (tooltipNode!=-1) {
+					nodeLabel.setText("node: "+Integer.toString(tooltipNode)+"\ndegree: "+fdd.getDegreeDistribution(tooltipNode));
 					nodeLabel.setVisible(true);
-					nodeLabel.setLayoutX(event.getX()+10);
-					nodeLabel.setLayoutY(event.getY()-10);
+					nodeLabel.setLayoutX(event.getX()+25);
+					nodeLabel.setLayoutY(event.getY()-25);
 				} else {
 					nodeLabel.setVisible(false);
 				}
@@ -183,7 +192,8 @@ public class Controller {
 	protected void treeGraphPressed(ActionEvent event){
 		readTextField();
 		startDrawing();
-		fdd.buildTreeGraph();
+		//fdd.buildTreeGraph();
+		fdd.buildFancyTreeGraph();
 		startRenderingAndAnimation();
 		
 	}
@@ -268,7 +278,11 @@ public class Controller {
 				//System.out.println("CF:"+colorFactor+" D(i)"+fdd.getDegreeDistribution(i)+" min:"+fdd.getMinDegree()+" max:"+fdd.getMaxDegree());
 				gc.setFill(nodeColor.interpolate(nodeTargetColor, colorFactor));
 			}
-			drawSingleNode(fdd.getNodeX(i), fdd.getNodeY(i), nodeSize+fdd.getDegreeDistribution(i));
+			if(fdd.getMinDegree()!=fdd.getMaxDegree()){ //doesn't solve the issue for high density graphs
+				drawSingleNode(fdd.getNodeX(i), fdd.getNodeY(i), nodeSize+fdd.getDegreeDistribution(i));
+			}else{
+				drawSingleNode(fdd.getNodeX(i), fdd.getNodeY(i), nodeSize);
+			}
 		}
 	}
 	
@@ -283,7 +297,12 @@ public class Controller {
 	 */
 	private double[] nodeHitbox(int node){
 		double[] hitbox = new double[4];
-		double size=  nodeSize+fdd.getDegreeDistribution(node);
+		double size;
+		if(fdd.getMinDegree()!=fdd.getMaxDegree()){
+			size=nodeSize+fdd.getDegreeDistribution(node);
+		}else{
+			size= nodeSize;
+		}
 		double x = fdd.getNodeX(node);
 		double y = fdd.getNodeY(node);
 		if (nodeBorder) {

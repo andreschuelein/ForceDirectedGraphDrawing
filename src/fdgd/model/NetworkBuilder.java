@@ -218,12 +218,32 @@ public class NetworkBuilder {
  		computeExtremeDegrees();
  	}
  	
- 	public void buildNiceTreeGraph(){
+ 	public void buildFancyTreeGraph(){
  		clearGraph();
- 		int j;
+ 		int j=0;
  		if (numON>1) {
  			for (int i = 1; i < numON; i++) { //loop over all nodes
- 				j=(int)(Math.random()*i);
+ 				if (Math.random()<.4) {//random attachment
+ 					j=(int)(Math.random()*i);
+				}else{//preferential attachment
+					int totalDegree=0;
+					boolean connected=false;
+					for (int k = 0; k < i; k++) {
+						totalDegree+=degreeDistribution[k];
+					}
+					double linkProb=Math.random()*(totalDegree);
+					int c=0;
+ 					double tmp=0;
+ 					while(!connected){
+ 						tmp+=degreeDistribution[c];
+ 						if(linkProb<=tmp){
+ 							// then i->c is new edge
+ 							connected=true;
+ 							j=c;
+ 						}
+ 					c++;
+ 					}
+				}
  				setEdge(i,j);
  				degreeDistribution[i]++;
  				degreeDistribution[j]++;
@@ -232,6 +252,9 @@ public class NetworkBuilder {
  		computeExtremeDegrees();
  	}
  
+ 	
+ 	
+ 	
  	public void computeExtremeDegrees(){
  		minDegree=degreeDistribution[0];
  		maxDegree=degreeDistribution[0];
