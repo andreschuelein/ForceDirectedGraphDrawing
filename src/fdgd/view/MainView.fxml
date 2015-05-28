@@ -36,6 +36,38 @@
                            </padding>
                         </Label>
                         <Button layoutX="118.0" layoutY="48.0" mnemonicParsing="false" onAction="#treeGraphPressed" text="tree graph" />
+                        <VBox layoutX="5.0" layoutY="253.0" prefHeight="88.0" prefWidth="176.0">
+                           <children>
+                              <HBox prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <Label text="c1" />
+                                    <Slider fx:id="slider1" maxWidth="120.0" prefWidth="150.0" />
+                                    <Label fx:id="c1label" text="c1value" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <Label text="c2" />
+                                    <Slider fx:id="slider2" maxWidth="120.0" prefWidth="150.0" />
+                                    <Label fx:id="c2label" text="c2value" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <Label text="c3" />
+                                    <Slider fx:id="slider3" maxWidth="120.0" prefWidth="150.0" />
+                                    <Label fx:id="c3label" text="c3value" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <Label text="c4" />
+                                    <Slider fx:id="slider4" maxWidth="120.0" prefWidth="150.0" />
+                                    <Label fx:id="c4label" text="c4value" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
                      </children>
                   </Pane>
                </children>

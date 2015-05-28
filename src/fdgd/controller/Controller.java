@@ -12,6 +12,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
@@ -63,6 +64,14 @@ public class Controller {
 	@FXML private Canvas drawArea;
 	@FXML private TextField textField;	
 	@FXML private ChoiceBox<String> cbox;
+	@FXML private Label c1label;
+	@FXML private Label c2label;
+	@FXML private Label c3label;
+	@FXML private Label c4label;
+	@FXML private Slider slider1;
+	@FXML private Slider slider2;
+	@FXML private Slider slider3;
+	@FXML private Slider slider4;
 	
 	@FXML 
 	public void initialize(){
@@ -135,6 +144,8 @@ public class Controller {
 				}
 			}
 		});
+		initSliders();
+		
 		
 		cbox.getItems().addAll("auto zoom/pane","free zoom/pane");
 		cbox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
@@ -157,6 +168,61 @@ public class Controller {
 		//START ANIMATION
 		animationIni();
 		startRenderingAndAnimation();
+	}
+	
+	private void initSliders() {
+		initSlider(slider1,1,900);
+		c1label.setText(Double.toString(slider1.getValue()));
+		slider1.valueProperty().addListener(new ChangeListener<Object>() {
+			@Override
+			public void changed(ObservableValue observable, Object oldValue,
+					Object newValue) {
+				c1label.setText(Double.toString(slider1.getValue()));
+				fdd.setC1(slider1.getValue());
+				
+			}
+		});
+		initSlider(slider2, 0.1, 2);
+		c2label.setText(Double.toString(slider2.getValue()));
+		slider2.valueProperty().addListener(new ChangeListener<Object>() {
+			@Override
+			public void changed(ObservableValue observable, Object oldValue,
+					Object newValue) {
+				c2label.setText(Double.toString(slider2.getValue()));
+				fdd.setC2(slider2.getValue());
+				
+			}
+		});
+		initSlider(slider3, 1, 10000);
+		c3label.setText(Double.toString(slider3.getValue()));
+		slider3.valueProperty().addListener(new ChangeListener<Object>() {
+			@Override
+			public void changed(ObservableValue observable, Object oldValue,
+					Object newValue) {
+				c3label.setText(Double.toString(slider3.getValue()));
+				fdd.setC3(slider3.getValue());
+				
+			}
+		});
+		initSlider(slider4, 1, 100);
+		c4label.setText(Double.toString(slider4.getValue()));
+		slider4.valueProperty().addListener(new ChangeListener<Object>() {
+			@Override
+			public void changed(ObservableValue observable, Object oldValue,
+					Object newValue) {
+				c4label.setText(Double.toString(slider4.getValue()));
+				fdd.setC4(slider4.getValue());
+				
+			}
+		});
+	}
+
+	private void initSlider(Slider slider, double min, double max){
+		slider.setShowTickMarks(true);
+		slider.setMajorTickUnit(50);
+		slider.setMinorTickCount(5);
+		slider.setMin(min);
+		slider.setMax(max);
 	}
 	
 	@FXML
