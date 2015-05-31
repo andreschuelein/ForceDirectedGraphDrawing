@@ -1,6 +1,8 @@
 package fdgd.controller;
 
 
+import java.text.DecimalFormat;
+
 import fdgd.model.ForceDirectedDrawing;
 import javafx.animation.AnimationTimer;
 import javafx.beans.value.ChangeListener;
@@ -26,7 +28,7 @@ public class Controller {
 	private final double canH=1000; //canvas height
 	private final double contW=200;	//control area width
 	private Color canvasColor=Color.rgb(92,93,112); //canvas background color
-	private Color nodeColor=Color.DARKSLATEGRAY; //node color
+	private Color nodeColor=Color.web("hsl(120,100%,100%)");//Color.DARKSLATEBLUE; //node color
 	private Color nodeTargetColor=Color.rgb(237,74,74);
 	private Color edgeColor=Color.rgb(211,217,206); // edge color
 	private double defaultNodeSize=10;//canW/100;
@@ -57,6 +59,8 @@ public class Controller {
 	private boolean mousePressed=false;
 	private int draggedNode=-1;
 	private int tooltipNode=-1;
+	private DecimalFormat df0 = new DecimalFormat("0.");
+	private DecimalFormat df1 = new DecimalFormat("0.#");
 	
 	
 	@FXML private SplitPane splitPane;
@@ -136,16 +140,29 @@ public class Controller {
 			public void handle(ScrollEvent event) {
 				if (!autoZoom) {
 					if (event.getDeltaY()>0) { // scroll up - zoom in
-						zoom+=zoomFactor;
-					}else
-						if (zoom-zoomFactor>0) {
-							zoom-=zoomFactor; //scroll down - zoom out
-						}
+						System.out.println("+++IN+++");
+						System.out.println(event.getX()+" "+event.getY());
+						System.out.println("PRE:  "+shiftX+" "+shiftY+" "+zoom);
+						//shiftX=zoomer(event.getX(),Math.abs(zoom-newZoomFactor(zoom, true)));
+						//shiftY=zoomer(event.getY(),Math.abs(zoom-newZoomFactor(zoom, true)));
+						shiftX=zoomer(event.getX(),Math.abs(newZoomFactor(zoom, true)));
+						shiftY=zoomer(event.getY(),Math.abs(newZoomFactor(zoom, true)));
+						zoom=newZoomFactor(zoom, true);
+						System.out.println("POST: "+shiftX+" "+shiftY+" "+zoom);
+					}else{
+						System.out.println("+++OUT+++");
+						System.out.println(event.getX()+" "+event.getY());
+						System.out.println("PRE:  "+shiftX+" "+shiftY+" "+zoom);
+						shiftX=zoomer(event.getX(),Math.abs(zoom-newZoomFactor(zoom, false)));
+						shiftY=zoomer(event.getY(),Math.abs(zoom-newZoomFactor(zoom, false)));
+						zoom=newZoomFactor(zoom, false);
+						System.out.println("POST: "+shiftX+" "+shiftY+" "+zoom);
+					}
 				}
 			}
 		});
 		initSliders();
-		
+		initSliderLabels();
 		
 		cbox.getItems().addAll("auto zoom/pane","free zoom/pane");
 		cbox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
@@ -172,45 +189,45 @@ public class Controller {
 	
 	private void initSliders() {
 		initSlider(slider1,1,900);
-		c1label.setText(Double.toString(slider1.getValue()));
+		slider1.setValue(fdd.getC1());
 		slider1.valueProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue observable, Object oldValue,
 					Object newValue) {
-				c1label.setText(Double.toString(slider1.getValue()));
+				c1label.setText(df0.format(slider1.getValue()));
 				fdd.setC1(slider1.getValue());
 				
 			}
 		});
 		initSlider(slider2, 0.1, 2);
-		c2label.setText(Double.toString(slider2.getValue()));
+		slider2.setValue(fdd.getC2());
 		slider2.valueProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue observable, Object oldValue,
 					Object newValue) {
-				c2label.setText(Double.toString(slider2.getValue()));
+				c2label.setText(df1.format(slider2.getValue()));
 				fdd.setC2(slider2.getValue());
 				
 			}
 		});
 		initSlider(slider3, 1, 10000);
-		c3label.setText(Double.toString(slider3.getValue()));
+		slider3.setValue(fdd.getC3());
 		slider3.valueProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue observable, Object oldValue,
 					Object newValue) {
-				c3label.setText(Double.toString(slider3.getValue()));
+				c3label.setText(df0.format(slider3.getValue()));
 				fdd.setC3(slider3.getValue());
 				
 			}
 		});
 		initSlider(slider4, 1, 100);
-		c4label.setText(Double.toString(slider4.getValue()));
+		slider4.setValue(fdd.getC4());
 		slider4.valueProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue observable, Object oldValue,
 					Object newValue) {
-				c4label.setText(Double.toString(slider4.getValue()));
+				c4label.setText(df0.format(slider4.getValue()));
 				fdd.setC4(slider4.getValue());
 				
 			}
@@ -219,10 +236,17 @@ public class Controller {
 
 	private void initSlider(Slider slider, double min, double max){
 		slider.setShowTickMarks(true);
-		slider.setMajorTickUnit(50);
-		slider.setMinorTickCount(5);
+		slider.setMajorTickUnit(Math.abs(max-min)/4);
+		slider.setMinorTickCount(1);
 		slider.setMin(min);
 		slider.setMax(max);
+	}
+	
+	private void initSliderLabels(){
+		c1label.setText(df0.format(slider1.getValue()));
+		c2label.setText(df1.format(slider2.getValue()));
+		c3label.setText(df0.format(slider3.getValue()));
+		c4label.setText(df0.format(slider4.getValue()));;
 	}
 	
 	@FXML
@@ -338,11 +362,14 @@ public class Controller {
 	
 	private void drawNodes(){
 		gc.setFill(nodeColor);
+		int tmp;
 		for (int i = 0; i < fdd.getNumON(); i++) {
 			if(fdd.getMaxDegree()!=fdd.getMinDegree()){
-				double colorFactor=(double)(fdd.getDegreeDistribution(i)-fdd.getMinDegree())/(fdd.getMaxDegree()-fdd.getMinDegree());
+				//double colorFactor=(double)180*(fdd.getDegreeDistribution(i)-fdd.getMinDegree())/(fdd.getMaxDegree()-fdd.getMinDegree());
 				//System.out.println("CF:"+colorFactor+" D(i)"+fdd.getDegreeDistribution(i)+" min:"+fdd.getMinDegree()+" max:"+fdd.getMaxDegree());
-				gc.setFill(nodeColor.interpolate(nodeTargetColor, colorFactor));
+				//gc.setFill(nodeColor.interpolate(nodeTargetColor, colorFactor));
+				tmp=(int)120+240*(fdd.getDegreeDistribution(i)-fdd.getMinDegree())/(fdd.getMaxDegree()-fdd.getMinDegree());
+				gc.setFill(Color.web("hsl("+Integer.toString(tmp)+",100%,100%)"));
 			}
 			if(fdd.getMinDegree()!=fdd.getMaxDegree()){ //doesn't solve the issue for high density graphs
 				drawSingleNode(fdd.getNodeX(i), fdd.getNodeY(i), nodeSize+fdd.getDegreeDistribution(i));
@@ -421,32 +448,52 @@ public class Controller {
 	}
 	
 	private double shifterX(double x){
-		return x+shiftX;
+		return shifter(x,shiftX);
+	}
+	
+	private double shifter(double x, double shift){
+		return x+shift;
 	}
 	
 	private double inverseShifterX(double x){
-		return x-shiftX;
+		return inverseShifter(x, shiftX);
+	}
+	
+	private double inverseShifter(double x, double shift){
+		return x-shift;
 	}
 	
 	private double shifterY(double y){
-		return y+shiftY;
+		return shifter(y,shiftY);
 	}
 	
+	
 	private double inverseShifterY(double y){
-		return y-shiftY;
+		return inverseShifter(y, shiftY);
 	}
 	
 	private double zoomer(double coordinate){
-		return coordinate*zoom;
+		return zoomer(coordinate,zoom);
+	}
+	
+	private double zoomer(double coordinate, double zoom1){
+		return coordinate*zoom1;
 	}
 	
 	private double inverseZoomer(double coordinate){
-		if (zoom!=0) {
-			return coordinate/zoom;
+		return inverseZoomer(coordinate, zoom);
+	}
+	
+	private double inverseZoomer(double coordinate, double zoom1){
+		if (zoom1!=0) {
+			return coordinate/zoom1;
 		}else{
 			return coordinate;
 		}
-		
+	}
+	
+	private double newZoomFactor(double oldZoom, boolean zoomIn){
+		return (zoomIn) ? oldZoom*(1+zoomFactor) : oldZoom/(1+zoomFactor);
 	}
 	
 	private void iniCenterAndZoom(){
@@ -474,7 +521,6 @@ public class Controller {
 						size+nodeBorderSize);
 			gc.setFill(colorbuffer);
 		}
-		
 		gc.fillOval(shifterX(zoomer(x))-size/2,
 				shifterY(zoomer(y))-size/2, 
 					size, 
