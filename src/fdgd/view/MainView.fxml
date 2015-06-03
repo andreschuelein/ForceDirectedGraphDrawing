@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fdgd.controller.Controller">
+<AnchorPane prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fdgd.controller.Controller">
    <children>
       <SplitPane fx:id="splitPane" dividerPositions="0.637123745819398" layoutX="118.0" layoutY="7.0" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <items>
@@ -26,7 +26,7 @@
                         <Button layoutX="105.0" layoutY="187.0" mnemonicParsing="false" onAction="#tenStepsPressed" text="10 Steps" />
                         <Button layoutX="4.0" layoutY="154.0" mnemonicParsing="false" onAction="#startAnimationPressed" text="Start Animation" />
                         <Button layoutX="4.0" layoutY="187.0" mnemonicParsing="false" onAction="#stopAnimationPressed" text="Stop Animation" />
-                        <Button layoutX="135.0" layoutY="352.0" mnemonicParsing="false" onAction="#exitButtonPressed" text="EXIT" />
+                        <Button layoutX="135.0" layoutY="399.0" mnemonicParsing="false" onAction="#exitButtonPressed" text="EXIT" />
                         <Button layoutX="4.0" layoutY="82.0" mnemonicParsing="false" onAction="#randomGraphPressed" text="random graph" />
                         <Button layoutX="4.0" layoutY="116.0" mnemonicParsing="false" onAction="#scaleFreeGraphPressed" text="scale-free graph" />
                         <ChoiceBox fx:id="cbox" layoutX="4.0" layoutY="219.0" prefWidth="150.0" />
@@ -35,8 +35,9 @@
                               <Insets left="20.0" top="20.0" />
                            </padding>
                         </Label>
+                        <CheckBox fx:id="tooltipCBox" layoutX="4.0" layoutY="252.0" mnemonicParsing="false" text="toggle node tooltip" />
                         <Button layoutX="118.0" layoutY="48.0" mnemonicParsing="false" onAction="#treeGraphPressed" text="tree graph" />
-                        <VBox layoutX="5.0" layoutY="253.0" prefHeight="88.0" prefWidth="176.0">
+                        <VBox layoutX="8.0" layoutY="305.0" prefHeight="88.0" prefWidth="176.0">
                            <children>
                               <HBox prefHeight="100.0" prefWidth="200.0">
                                  <children>
@@ -68,6 +69,7 @@
                               </HBox>
                            </children>
                         </VBox>
+                        <CheckBox fx:id="tooltipCBox1" layoutX="4.0" layoutY="276.0" mnemonicParsing="false" text="toggle rendering of edges" />
                      </children>
                   </Pane>
                </children>
