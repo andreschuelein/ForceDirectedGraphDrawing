@@ -20,10 +20,8 @@ public class FDGDMain extends Application {
 			primaryStage.setTitle("Force-Directed Graph Drawing");
 			primaryStage.show();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 
 	public static void main(String[] args) {

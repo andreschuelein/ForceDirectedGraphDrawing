@@ -69,7 +69,7 @@
                               </HBox>
                            </children>
                         </VBox>
-                        <CheckBox fx:id="tooltipCBox1" layoutX="4.0" layoutY="276.0" mnemonicParsing="false" text="toggle rendering of edges" />
+                        <CheckBox fx:id="edgeRenderingCBox" layoutX="4.0" layoutY="276.0" mnemonicParsing="false" text="toggle rendering of edges" />
                      </children>
                   </Pane>
                </children>
